@@ -26,12 +26,13 @@ export const Store = {
   getStrengthLevels: () => get('strength_levels', {}),
   saveStrengthLevels: (levels) => set('strength_levels', levels),
 
-  getSettings: () =>
-    get('settings', {
-      playlistCycling: '',
-      playlistStrength: '',
-      goalWeightKg: null
-    }),
+  getSettings: () => ({
+    playlistCycling: '',
+    playlistStrength: '',
+    goalWeightKg: null,
+    strengthDays: [1, 3, 5],
+    ...get('settings', {})
+  }),
   saveSettings: (settings) => set('settings', settings),
 
   getStreak: () =>

@@ -32,6 +32,11 @@ function showNewBadges(newBadges) {
   newBadges.forEach((b, i) => setTimeout(() => toast(`${b.emoji} Nieuwe badge: ${b.name}`), i * 1400 + 400));
 }
 
+const DAY_LABELS = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
+function isoWeekday(date = new Date()) {
+  return ((date.getDay() + 6) % 7) + 1;
+}
+
 function playlistLink(container, url) {
   container.innerHTML = '';
   const clean = sanitizeUrl(url);
@@ -66,6 +71,28 @@ function renderDashboard() {
   document.getElementById('streak-current').textContent = streak.current;
   document.getElementById('streak-longest').textContent = streak.longest;
   document.getElementById('quote-text').textContent = '"' + quoteForToday() + '"';
+
+  const strengthDays = Store.getSettings().strengthDays || [1, 3, 5];
+  const today = isoWeekday();
+  const strip = document.getElementById('week-strip');
+  strip.innerHTML = '';
+  DAY_LABELS.forEach((label, i) => {
+    const dayNum = i + 1;
+    const cell = document.createElement('div');
+    cell.className = 'day-cell' + (dayNum === today ? ' today' : '');
+    const icon = document.createElement('span');
+    icon.className = 'icon';
+    icon.textContent = strengthDays.includes(dayNum) ? '🏋️' : '🚴';
+    const lab = document.createElement('span');
+    lab.className = 'label';
+    lab.textContent = label;
+    cell.appendChild(icon);
+    cell.appendChild(lab);
+    strip.appendChild(cell);
+  });
+  document.getElementById('week-nudge').textContent = strengthDays.includes(today)
+    ? '💪 Vandaag staat kracht gepland.'
+    : '🚴 Vandaag lekker fietsen, kracht is een andere dag.';
 
   const rides = Store.getRides();
   const weekAgo = Date.now() - 7 * 86400000;
@@ -250,7 +277,10 @@ function renderStrength() {
   document.getElementById('strength-active').style.display = activeSession ? 'block' : 'none';
   document.getElementById('strength-week-count').textContent = `${getWeeklyCount()}/3`;
   const nextDay = getNextDay();
-  document.getElementById('strength-next-day').textContent = `Volgende workout: ${DAYS[nextDay].label}`;
+  const strengthDays = Store.getSettings().strengthDays || [1, 3, 5];
+  const plannedToday = strengthDays.includes(isoWeekday());
+  document.getElementById('strength-next-day').textContent =
+    `Volgende workout: ${DAYS[nextDay].label}` + (plannedToday ? ' · vandaag is een geplande dag' : '');
   playlistLink(document.getElementById('strength-playlist-btn'), Store.getSettings().playlistStrength);
   renderStrengthHistory();
 }
@@ -436,11 +466,33 @@ function renderWeightHistory(weights) {
 }
 
 /* ---------- settings ---------- */
+let selectedStrengthDays = [];
+
 function renderSettings() {
   const settings = Store.getSettings();
   document.getElementById('settings-playlist-cycling').value = settings.playlistCycling || '';
   document.getElementById('settings-playlist-strength').value = settings.playlistStrength || '';
   document.getElementById('settings-goal-weight').value = settings.goalWeightKg || '';
+
+  selectedStrengthDays = [...(settings.strengthDays || [1, 3, 5])];
+  const dayPicker = document.getElementById('settings-strength-days');
+  dayPicker.innerHTML = '';
+  DAY_LABELS.forEach((label, i) => {
+    const dayNum = i + 1;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = label;
+    btn.classList.toggle('selected', selectedStrengthDays.includes(dayNum));
+    btn.addEventListener('click', () => {
+      if (selectedStrengthDays.includes(dayNum)) {
+        selectedStrengthDays = selectedStrengthDays.filter((d) => d !== dayNum);
+      } else {
+        selectedStrengthDays.push(dayNum);
+      }
+      btn.classList.toggle('selected', selectedStrengthDays.includes(dayNum));
+    });
+    dayPicker.appendChild(btn);
+  });
 
   const levelsWrap = document.getElementById('settings-levels');
   levelsWrap.innerHTML = '';
@@ -470,6 +522,7 @@ document.getElementById('settings-save-btn').addEventListener('click', () => {
   settings.playlistStrength = sanitizeUrl(document.getElementById('settings-playlist-strength').value.trim());
   const goal = parseFloat(document.getElementById('settings-goal-weight').value);
   settings.goalWeightKg = goal > 0 ? goal : null;
+  settings.strengthDays = selectedStrengthDays.length ? [...selectedStrengthDays].sort() : [1, 3, 5];
   Store.saveSettings(settings);
   toast('Instellingen opgeslagen.');
 });
