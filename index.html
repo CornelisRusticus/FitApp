@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FitStreak</title>
+<meta name="theme-color" content="#0b1120">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1>FitStreak</h1>
+  <p id="header-sub">Klein en vaak wint.</p>
+</header>
+
+<main>
+
+<section id="screen-dashboard" class="screen active">
+  <div class="card">
+    <div class="streak-hero">
+      <div class="flame">🔥</div>
+      <div>
+        <div class="num"><span id="streak-current">0</span> dagen</div>
+        <div class="sub">langste streak: <span id="streak-longest">0</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="card"><p class="quote" id="quote-text"></p></div>
+  <div class="card">
+    <h2>Deze week</h2>
+    <div class="stat-row">
+      <div class="stat-box"><div class="num" id="week-km">0</div><div class="label">km gefietst</div></div>
+      <div class="stat-box"><div class="num" id="week-strength">0/3</div><div class="label">krachtsessies</div></div>
+      <div class="stat-box"><div class="num" id="dash-level">1</div><div class="label">level</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Activiteit (10 weken)</h2>
+    <div class="heatmap" id="heatmap"></div>
+  </div>
+  <div class="card">
+    <h2>Badges</h2>
+    <div class="badge-grid" id="badge-grid"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-primary" data-nav="cycling">🚴 Fietsen</button>
+    <button class="btn-primary" data-nav="strength" style="background:linear-gradient(135deg,var(--accent-2),#c2410c);color:#2a1200;">🏋️ Kracht</button>
+  </div>
+</section>
+
+<section id="screen-cycling" class="screen">
+  <div class="card" id="cycling-idle">
+    <h2>Fietsrit</h2>
+    <div id="cycling-playlist-btn"></div>
+    <button class="btn-primary" id="ride-start-btn">Start rit</button>
+    <p class="empty" id="cycling-error"></p>
+  </div>
+  <div class="card" id="cycling-live" style="display:none;">
+    <div class="live-metric">
+      <div class="big" id="live-speed">0.0</div>
+      <div class="unit">km/u</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="num" id="live-distance">0.00</div><div class="label">km</div></div>
+      <div class="stat-box"><div class="num" id="live-time">00:00</div><div class="label">tijd</div></div>
+      <div class="stat-box"><div class="num" id="live-avg">0.0</div><div class="label">gem km/u</div></div>
+    </div>
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn-secondary" id="ride-pause-btn">Pauze</button>
+      <button class="btn-primary" id="ride-stop-btn" style="background:var(--bad);color:#fff;">Stop</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Records</h2>
+    <div class="stat-row" id="ride-prs"></div>
+  </div>
+  <div class="card">
+    <h2>Geschiedenis</h2>
+    <div id="ride-history"><p class="empty">Nog geen ritten gelogd.</p></div>
+  </div>
+</section>
+
+<section id="screen-strength" class="screen">
+  <div class="card" id="strength-idle">
+    <h2>Krachttraining</h2>
+    <p class="quote" id="strength-next-day"></p>
+    <div id="strength-playlist-btn"></div>
+    <button class="btn-primary" id="strength-start-btn">Start workout</button>
+  </div>
+  <div class="card" id="strength-active" style="display:none;">
+    <h2 id="strength-active-title"></h2>
+    <div id="strength-exercises"></div>
+    <button class="btn-primary" id="strength-finish-btn">Sessie afronden</button>
+  </div>
+  <div class="card">
+    <h2>Deze week</h2>
+    <div class="stat-row"><div class="stat-box"><div class="num" id="strength-week-count">0/3</div><div class="label">sessies</div></div></div>
+  </div>
+  <div class="card">
+    <h2>Geschiedenis</h2>
+    <div id="strength-history"><p class="empty">Nog geen sessies gelogd.</p></div>
+  </div>
+</section>
+
+<section id="screen-weight" class="screen">
+  <div class="card">
+    <h2>Gewicht loggen</h2>
+    <label for="weight-date">Datum</label>
+    <input type="date" id="weight-date">
+    <label for="weight-input">Gewicht (kg)</label>
+    <input type="number" step="0.1" id="weight-input" placeholder="bv. 82.4">
+    <button class="btn-primary" id="weight-save-btn" style="margin-top:12px;">Opslaan</button>
+  </div>
+  <div class="card">
+    <h2>Trend</h2>
+    <canvas class="chart" id="weight-chart" width="440" height="140"></canvas>
+    <p class="empty" id="weight-goal-note"></p>
+  </div>
+  <div class="card">
+    <h2>Geschiedenis</h2>
+    <div id="weight-history"><p class="empty">Nog geen gewicht gelogd.</p></div>
+  </div>
+</section>
+
+<section id="screen-settings" class="screen">
+  <div class="card">
+    <h2>Muziek</h2>
+    <label for="settings-playlist-cycling">Playlist-link fietsen (Spotify/YouTube Music)</label>
+    <input type="url" id="settings-playlist-cycling" placeholder="https://open.spotify.com/playlist/...">
+    <label for="settings-playlist-strength">Playlist-link krachttraining</label>
+    <input type="url" id="settings-playlist-strength" placeholder="https://open.spotify.com/playlist/...">
+  </div>
+  <div class="card">
+    <h2>Doel</h2>
+    <label for="settings-goal-weight">Streefgewicht (kg, optioneel)</label>
+    <input type="number" step="0.1" id="settings-goal-weight">
+  </div>
+  <div class="card">
+    <h2>Kracht-niveaus handmatig aanpassen</h2>
+    <div id="settings-levels"></div>
+  </div>
+  <div class="card">
+    <button class="btn-primary" id="settings-save-btn">Instellingen opslaan</button>
+  </div>
+  <div class="card">
+    <h2>Backup</h2>
+    <p class="empty">Alle data staat alleen lokaal op dit toestel. Maak een backup als je van telefoon wisselt.</p>
+    <div class="btn-row">
+      <button class="btn-secondary" id="export-btn">Exporteer</button>
+      <button class="btn-secondary" id="import-btn">Importeer</button>
+    </div>
+    <input type="file" id="import-file" accept="application/json" style="display:none;">
+  </div>
+  <div class="card">
+    <h2>Over FitStreak</h2>
+    <p class="empty">Geen account, geen server, geen tracking. Alles blijft op je telefoon.</p>
+  </div>
+</section>
+
+</main>
+
+<nav class="tabbar">
+  <button data-nav="dashboard" class="active"><span class="icon">🏠</span>Home</button>
+  <button data-nav="cycling"><span class="icon">🚴</span>Fietsen</button>
+  <button data-nav="strength"><span class="icon">🏋️</span>Kracht</button>
+  <button data-nav="weight"><span class="icon">⚖️</span>Gewicht</button>
+  <button data-nav="settings"><span class="icon">⚙️</span>Instellingen</button>
+</nav>
+
+<div id="toast-container"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
