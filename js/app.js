@@ -4,6 +4,7 @@ import { recordActivity, getHeatmapData, BADGES, levelForXp } from './gamificati
 import { createRideTracker, saveRide, drawRoute } from './cycling.js';
 import { EXERCISES, DAYS, RPE_OPTIONS, getLevelIndex, setLevelIndex, getNextDay, getWeeklyCount, logSession } from './strength.js';
 import { addWeight, drawWeightChart } from './weight.js';
+import { exerciseDiagramSvg, exerciseNote } from './illustrations.js';
 
 function sanitizeUrl(url) {
   if (!url) return '';
@@ -314,9 +315,27 @@ function renderStrengthExercises() {
     h3.textContent = def.name;
     const target = document.createElement('div');
     target.className = 'target';
-    target.textContent = `${levelDef.label} · ${levelDef.sets}x${levelDef.reps} ${unit}`;
+    target.textContent =
+      unit === 'sec'
+        ? `${levelDef.label} · ${levelDef.sets} sets van ${levelDef.reps} sec vasthouden`
+        : `${levelDef.label} · ${levelDef.sets} sets van ${levelDef.reps} herhalingen`;
+    const rest = document.createElement('div');
+    rest.className = 'target';
+    rest.style.marginTop = '-6px';
+    rest.textContent = '⏱ Rust ~60-90 sec tussen elke set';
+    const diagramWrap = document.createElement('div');
+    diagramWrap.className = 'diagram-wrap';
+    diagramWrap.innerHTML = exerciseDiagramSvg(log.id);
+    const howTo = document.createElement('p');
+    howTo.className = 'empty';
+    howTo.style.textAlign = 'left';
+    howTo.style.margin = '6px 0 10px';
+    howTo.textContent = exerciseNote(log.id);
     block.appendChild(h3);
+    block.appendChild(diagramWrap);
     block.appendChild(target);
+    block.appendChild(rest);
+    block.appendChild(howTo);
 
     log.sets.forEach((val, setIdx) => {
       const row = document.createElement('div');

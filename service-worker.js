@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fitstreak-v1';
+const CACHE_NAME = 'fitstreak-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
   './js/cycling.js',
   './js/strength.js',
   './js/weight.js',
+  './js/illustrations.js',
   './js/app.js',
   './icons/icon.svg',
   './icons/icon-maskable.svg'

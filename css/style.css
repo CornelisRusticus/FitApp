@@ -147,6 +147,8 @@ canvas.route, canvas.chart { width: 100%; height: 140px; display: block; border-
 .exercise-block:last-child { border-bottom: none; }
 .exercise-block h3 { margin: 0 0 4px; font-size: 0.95rem; }
 .exercise-block .target { color: var(--text-dim); font-size: 0.8rem; margin-bottom: 8px; }
+.diagram-wrap { background: var(--surface-2); border-radius: 12px; padding: 6px; margin-bottom: 8px; }
+.exercise-diagram { width: 100%; height: 100px; display: block; }
 .set-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .set-row .set-label { width: 54px; color: var(--text-dim); font-size: 0.8rem; }
 .stepper { display: flex; align-items: center; gap: 6px; }
