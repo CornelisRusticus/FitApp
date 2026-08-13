@@ -302,6 +302,29 @@ document.getElementById('strength-start-btn').addEventListener('click', () => {
   document.getElementById('strength-active').style.display = 'block';
 });
 
+const REST_SECONDS = 75;
+
+function startRestTimer(timerEl) {
+  clearInterval(timerEl._interval);
+  let remaining = REST_SECONDS;
+  timerEl.classList.add('active');
+  timerEl.textContent = `⏱ Rust: ${remaining}s`;
+  timerEl._interval = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      clearInterval(timerEl._interval);
+      timerEl.textContent = '✅ Klaar voor de volgende set!';
+      setTimeout(() => timerEl.classList.remove('active'), 2500);
+      return;
+    }
+    timerEl.textContent = `⏱ Rust: ${remaining}s`;
+  }, 1000);
+}
+
+function youtubeSearchUrl(name) {
+  return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(name + ' oefening juiste vorm uitleg');
+}
+
 function renderStrengthExercises() {
   const container = document.getElementById('strength-exercises');
   container.innerHTML = '';
@@ -313,16 +336,19 @@ function renderStrengthExercises() {
     block.className = 'exercise-block';
     const h3 = document.createElement('h3');
     h3.textContent = def.name;
+    const videoLink = document.createElement('a');
+    videoLink.className = 'link-btn video-link';
+    videoLink.textContent = '▶️ Bekijk uitleg op YouTube';
+    videoLink.target = '_blank';
+    videoLink.rel = 'noopener';
+    videoLink.href = youtubeSearchUrl(def.name);
+    videoLink.style.display = 'block';
     const target = document.createElement('div');
     target.className = 'target';
     target.textContent =
       unit === 'sec'
         ? `${levelDef.label} · ${levelDef.sets} sets van ${levelDef.reps} sec vasthouden`
         : `${levelDef.label} · ${levelDef.sets} sets van ${levelDef.reps} herhalingen`;
-    const rest = document.createElement('div');
-    rest.className = 'target';
-    rest.style.marginTop = '-6px';
-    rest.textContent = '⏱ Rust ~60-90 sec tussen elke set';
     const diagramWrap = document.createElement('div');
     diagramWrap.className = 'diagram-wrap';
     diagramWrap.innerHTML = exerciseDiagramSvg(log.id);
@@ -332,43 +358,40 @@ function renderStrengthExercises() {
     howTo.style.margin = '6px 0 10px';
     howTo.textContent = exerciseNote(log.id);
     block.appendChild(h3);
+    block.appendChild(videoLink);
     block.appendChild(diagramWrap);
     block.appendChild(target);
-    block.appendChild(rest);
     block.appendChild(howTo);
 
+    const restTimer = document.createElement('div');
+    restTimer.className = 'rest-timer';
+
     log.sets.forEach((val, setIdx) => {
-      const row = document.createElement('div');
-      row.className = 'set-row';
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'set-check';
       const setLabel = document.createElement('span');
-      setLabel.className = 'set-label';
-      setLabel.textContent = `Set ${setIdx + 1}`;
-      const stepper = document.createElement('div');
-      stepper.className = 'stepper';
-      const minus = document.createElement('button');
-      minus.type = 'button';
-      minus.textContent = '−';
-      const valSpan = document.createElement('span');
-      valSpan.className = 'val';
-      valSpan.textContent = val;
-      const plus = document.createElement('button');
-      plus.type = 'button';
-      plus.textContent = '+';
-      minus.addEventListener('click', () => {
-        log.sets[setIdx] = Math.max(0, log.sets[setIdx] - 1);
-        valSpan.textContent = log.sets[setIdx];
+      setLabel.textContent = unit === 'sec' ? `Set ${setIdx + 1} · ${levelDef.reps} sec` : `Set ${setIdx + 1} · ${levelDef.reps} reps`;
+      const checkIcon = document.createElement('span');
+      checkIcon.className = 'check-icon';
+      const applyState = () => {
+        const done = log.sets[setIdx] >= levelDef.reps;
+        row.classList.toggle('done', done);
+        checkIcon.textContent = done ? '✅' : '☐';
+      };
+      applyState();
+      row.addEventListener('click', () => {
+        const wasDone = log.sets[setIdx] >= levelDef.reps;
+        log.sets[setIdx] = wasDone ? 0 : levelDef.reps;
+        applyState();
+        if (!wasDone) startRestTimer(restTimer);
       });
-      plus.addEventListener('click', () => {
-        log.sets[setIdx] = log.sets[setIdx] + 1;
-        valSpan.textContent = log.sets[setIdx];
-      });
-      stepper.appendChild(minus);
-      stepper.appendChild(valSpan);
-      stepper.appendChild(plus);
       row.appendChild(setLabel);
-      row.appendChild(stepper);
+      row.appendChild(checkIcon);
       block.appendChild(row);
     });
+
+    block.appendChild(restTimer);
 
     const rpeRow = document.createElement('div');
     rpeRow.className = 'rpe-row';
@@ -493,6 +516,15 @@ function renderSettings() {
   document.getElementById('settings-playlist-strength').value = settings.playlistStrength || '';
   document.getElementById('settings-goal-weight').value = settings.goalWeightKg || '';
 
+  const lastBackup = Store.getLastBackup();
+  const note = document.getElementById('last-backup-note');
+  if (!lastBackup) {
+    note.textContent = '📦 Nog geen backup gemaakt.';
+  } else {
+    const days = Math.floor((Date.now() - new Date(lastBackup).getTime()) / 86400000);
+    note.textContent = days === 0 ? '📦 Laatste backup: vandaag.' : `📦 Laatste backup: ${days} dag${days === 1 ? '' : 'en'} geleden.`;
+  }
+
   selectedStrengthDays = [...(settings.strengthDays || [1, 3, 5])];
   const dayPicker = document.getElementById('settings-strength-days');
   dayPicker.innerHTML = '';
@@ -555,6 +587,8 @@ document.getElementById('export-btn').addEventListener('click', () => {
   a.download = `fitstreak-backup-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
+  Store.saveLastBackup(new Date().toISOString());
+  renderSettings();
 });
 
 document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());

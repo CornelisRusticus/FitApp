@@ -45,6 +45,9 @@ export const Store = {
   getXp: () => get('xp', 0),
   saveXp: (xp) => set('xp', xp),
 
+  getLastBackup: () => get('last_backup', null),
+  saveLastBackup: (isoDate) => set('last_backup', isoDate),
+
   exportAll: () => {
     const data = {};
     for (const k of Object.keys(localStorage)) {

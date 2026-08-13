@@ -99,7 +99,8 @@
   <div class="card">
     <h2>Hoe werkt dit?</h2>
     <p class="empty" style="text-align:left; margin:0 0 6px;"><strong>3 x 12</strong> betekent: 3 sets (rondes) van 12 herhalingen. Rust ongeveer 60-90 seconden tussen elke set.</p>
-    <p class="empty" style="text-align:left; margin:0;">Staat er <strong>"sec"</strong> bij (zoals Plank)? Dan is het geen herhalingen, maar een tijd die je in die houding vasthoudt.</p>
+    <p class="empty" style="text-align:left; margin:0 0 6px;">Staat er <strong>"sec"</strong> bij (zoals Plank)? Dan is het geen herhalingen, maar een tijd die je in die houding vasthoudt.</p>
+    <p class="empty" style="text-align:left; margin:0;">Na elke sessie vraagt de app hoe zwaar het voelde (😌/🙂/😮‍💨). Voelde het 2x op rij op "Makkelijk" of "Precies goed" met je volle reps? Dan schuift de app je automatisch naar een lastigere variant — zo blijft het altijd net zwaar genoeg, zonder dat jij dat hoeft bij te houden.</p>
   </div>
   <div class="card" id="strength-active" style="display:none;">
     <h2 id="strength-active-title"></h2>
@@ -162,17 +163,15 @@
     <button class="btn-primary" id="settings-save-btn">Instellingen opslaan</button>
   </div>
   <div class="card">
-    <h2>Backup</h2>
-    <p class="empty">Alle data staat alleen lokaal op dit toestel. Maak een backup als je van telefoon wisselt.</p>
+    <h2>Data & veiligheid</h2>
+    <p class="empty" style="text-align:left; margin:0 0 6px;">Al je gegevens (ritten, sessies, gewicht) staan <strong>alleen lokaal in deze browser op dit toestel</strong> — nergens anders. Er is geen server en geen account, dus niemand anders kan erbij, ook wij niet.</p>
+    <p class="empty" style="text-align:left; margin:0 0 12px;">Keerzijde: er is ook <strong>geen automatische back-up in de cloud</strong>. Verlies of wis je je telefoon (of app-data), dan ben je je geschiedenis kwijt — tenzij je zelf een export maakt. Doe dat af en toe en bewaar het bestandje ergens veilig (bv. Google Drive of e-mail naar jezelf).</p>
+    <p class="empty" id="last-backup-note" style="margin:0 0 10px;"></p>
     <div class="btn-row">
-      <button class="btn-secondary" id="export-btn">Exporteer</button>
+      <button class="btn-secondary" id="export-btn">Exporteer backup</button>
       <button class="btn-secondary" id="import-btn">Importeer</button>
     </div>
     <input type="file" id="import-file" accept="application/json" style="display:none;">
-  </div>
-  <div class="card">
-    <h2>Over FitStreak</h2>
-    <p class="empty">Geen account, geen server, geen tracking. Alles blijft op je telefoon.</p>
   </div>
 </section>
 

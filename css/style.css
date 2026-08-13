@@ -149,11 +149,12 @@ canvas.route, canvas.chart { width: 100%; height: 140px; display: block; border-
 .exercise-block .target { color: var(--text-dim); font-size: 0.8rem; margin-bottom: 8px; }
 .diagram-wrap { background: var(--surface-2); border-radius: 12px; padding: 6px; margin-bottom: 8px; }
 .exercise-diagram { width: 100%; height: 100px; display: block; }
-.set-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.set-row .set-label { width: 54px; color: var(--text-dim); font-size: 0.8rem; }
-.stepper { display: flex; align-items: center; gap: 6px; }
-.stepper button { width: 34px; height: 34px; background: var(--surface-2); color: var(--text); font-size: 1.1rem; }
-.stepper .val { min-width: 30px; text-align: center; font-weight: 700; }
+.set-check { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; margin-bottom: 8px; padding: 12px 14px; background: var(--surface-2); color: var(--text); font-size: 0.88rem; font-weight: 600; }
+.set-check.done { background: rgba(34, 211, 238, 0.15); box-shadow: inset 0 0 0 1px var(--accent); color: var(--accent); }
+.set-check .check-icon { font-size: 1.15rem; }
+.rest-timer { display: none; text-align: center; padding: 10px; margin: 4px 0 10px; border-radius: 12px; background: rgba(251, 146, 60, 0.15); box-shadow: inset 0 0 0 1px var(--accent-2); font-weight: 700; color: var(--accent-2); }
+.rest-timer.active { display: block; }
+.video-link { margin: 4px 0 10px; }
 .rpe-row { display: flex; gap: 6px; margin-top: 6px; }
 .rpe-row button { flex: 1; padding: 8px 4px; background: var(--surface-2); color: var(--text-dim); font-size: 0.75rem; }
 .rpe-row button.selected { background: var(--accent); color: #04222a; font-weight: 700; }
