@@ -1,7 +1,7 @@
 import { Store } from './storage.js';
 import { quoteForToday } from './quotes.js';
 import { recordActivity, getHeatmapData, BADGES, levelForXp } from './gamification.js';
-import { createRideTracker, saveRide, drawRoute } from './cycling.js';
+import { createRideTracker, saveRide, drawRoute, CYCLING_LEVELS, getCurrentWeekMinutes, checkCyclingProgression } from './cycling.js';
 import { EXERCISES, DAYS, RPE_OPTIONS, getLevelIndex, setLevelIndex, getNextDay, getWeeklyCount, logSession } from './strength.js';
 import { addWeight, drawWeightChart } from './weight.js';
 import { exerciseDiagramSvg, exerciseNote } from './illustrations.js';
@@ -145,6 +145,14 @@ function renderCycling() {
   document.getElementById('cycling-idle').style.display = tracker ? 'none' : 'block';
   document.getElementById('cycling-live').style.display = tracker ? 'block' : 'none';
   playlistLink(document.getElementById('cycling-playlist-btn'), Store.getSettings().playlistCycling);
+
+  const level = Store.getCyclingLevel();
+  const plan = CYCLING_LEVELS[level];
+  document.getElementById('cycling-plan-label').textContent = `Niveau: ${plan.label}`;
+  document.getElementById('cycling-plan-desc').textContent = plan.description;
+  document.getElementById('cycling-week-min').textContent = Math.round(getCurrentWeekMinutes());
+  document.getElementById('cycling-week-target').textContent = plan.weeklyTargetMin;
+
   renderRidePRs();
   renderRideHistory();
 }
@@ -195,6 +203,8 @@ document.getElementById('ride-stop-btn').addEventListener('click', () => {
   if (prs.avgSpeed) { setTimeout(() => toast('⚡ Nieuw record: hoogste gemiddelde snelheid!'), delay); delay += 1200; }
   if (prs.maxSpeed) { setTimeout(() => toast('⚡ Nieuw record: hoogste topsnelheid!'), delay); delay += 1200; }
   newBadges.forEach((b) => { setTimeout(() => toast(`${b.emoji} Nieuwe badge: ${b.name}`), delay); delay += 1200; });
+  const leveledUpPlan = checkCyclingProgression();
+  if (leveledUpPlan) { setTimeout(() => toast(`🚴 Fietsplan omhoog: ${leveledUpPlan.label}!`), delay); delay += 1200; }
   renderCycling();
 });
 

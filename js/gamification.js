@@ -9,7 +9,7 @@ function daysBetween(a, b) {
   return Math.round(ms / 86400000);
 }
 
-function isoWeekStart(d = new Date()) {
+export function isoWeekStart(d = new Date()) {
   const date = new Date(d);
   const day = (date.getDay() + 6) % 7;
   date.setHours(0, 0, 0, 0);

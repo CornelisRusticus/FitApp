@@ -48,6 +48,9 @@ export const Store = {
   getLastBackup: () => get('last_backup', null),
   saveLastBackup: (isoDate) => set('last_backup', isoDate),
 
+  getCyclingLevel: () => get('cycling_level', 0),
+  saveCyclingLevel: (level) => set('cycling_level', level),
+
   exportAll: () => {
     const data = {};
     for (const k of Object.keys(localStorage)) {
