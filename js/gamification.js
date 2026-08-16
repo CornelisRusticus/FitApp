@@ -26,8 +26,8 @@ export const BADGES = [
   { id: 'distance_50', emoji: '📏', name: '50 km totaal gefietst', check: (s) => s.totalKm >= 50 },
   { id: 'distance_250', emoji: '📏', name: '250 km totaal gefietst', check: (s) => s.totalKm >= 250 },
   { id: 'distance_1000', emoji: '🏆', name: '1000 km totaal gefietst', check: (s) => s.totalKm >= 1000 },
-  { id: 'speed_20', emoji: '⚡', name: 'Gemiddeld 20+ km/u gehaald', check: (s) => s.rides.some((r) => r.avgSpeed >= 20) },
-  { id: 'speed_28', emoji: '⚡', name: 'Gemiddeld 28+ km/u gehaald', check: (s) => s.rides.some((r) => r.avgSpeed >= 28) },
+  { id: 'long_ride_45', emoji: '⏱️', name: 'Rit van 45+ minuten', check: (s) => s.rides.some((r) => r.durationS / 60 >= 45) },
+  { id: 'cycling_level_up', emoji: '🚴', name: 'Fietsplan niveau omhoog', check: (s) => s.cyclingLevel >= 1 },
   { id: 'strength_10', emoji: '🏋️', name: '10 krachtsessies voltooid', check: (s) => s.sessions.length >= 10 },
   { id: 'strength_50', emoji: '🏋️', name: '50 krachtsessies voltooid', check: (s) => s.sessions.length >= 50 },
   { id: 'consistent_month', emoji: '📅', name: '4 weken op rij actief', check: (s) => s.streak.longest >= 28 }
@@ -77,8 +77,9 @@ export function checkNewBadges() {
   const rides = Store.getRides();
   const sessions = Store.getStrengthSessions();
   const streak = Store.getStreak();
-  const totalKm = rides.reduce((sum, r) => sum + r.distanceKm, 0);
-  const state = { rides, sessions, streak, totalKm };
+  const totalKm = rides.reduce((sum, r) => sum + (r.distanceKm || 0), 0);
+  const cyclingLevel = Store.getCyclingLevel();
+  const state = { rides, sessions, streak, totalKm, cyclingLevel };
 
   const earned = Store.getBadges();
   const earnedIds = new Set(earned.map((b) => b.id));

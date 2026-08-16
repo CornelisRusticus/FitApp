@@ -58,26 +58,24 @@
 </section>
 
 <section id="screen-cycling" class="screen">
-  <div class="card" id="cycling-idle">
-    <h2>Fietsrit</h2>
+  <div class="card">
+    <h2>Rit loggen</h2>
     <div id="cycling-playlist-btn"></div>
-    <button class="btn-primary" id="ride-start-btn">Start rit</button>
-    <p class="empty" id="cycling-error"></p>
-  </div>
-  <div class="card" id="cycling-live" style="display:none;">
-    <div class="live-metric">
-      <div class="big" id="live-speed">0.0</div>
-      <div class="unit">km/u</div>
+    <p class="empty" style="text-align:left; margin:0 0 8px;">Tik hoe lang je gefietst hebt:</p>
+    <div class="preset-row" id="duration-presets">
+      <button type="button" data-min="5">5 min</button>
+      <button type="button" data-min="15">15 min</button>
+      <button type="button" data-min="30">30 min</button>
+      <button type="button" data-min="45">45 min</button>
+      <button type="button" data-min="60">60 min</button>
     </div>
-    <div class="stat-row">
-      <div class="stat-box"><div class="num" id="live-distance">0.00</div><div class="label">km</div></div>
-      <div class="stat-box"><div class="num" id="live-time">00:00</div><div class="label">tijd</div></div>
-      <div class="stat-box"><div class="num" id="live-avg">0.0</div><div class="label">gem km/u</div></div>
-    </div>
-    <div class="btn-row" style="margin-top:14px;">
-      <button class="btn-secondary" id="ride-pause-btn">Pauze</button>
-      <button class="btn-primary" id="ride-stop-btn" style="background:var(--bad);color:#fff;">Stop</button>
-    </div>
+    <label for="ride-minutes">Of eigen aantal minuten</label>
+    <input type="number" id="ride-minutes" min="1" placeholder="bv. 22">
+    <label for="ride-distance">Afstand in km (optioneel)</label>
+    <input type="number" step="0.1" id="ride-distance" placeholder="bv. 5.2">
+    <label for="ride-date">Datum</label>
+    <input type="date" id="ride-date">
+    <button class="btn-primary" id="ride-log-btn" style="margin-top:10px;">Rit opslaan</button>
   </div>
   <div class="card">
     <h2>Fietsplan</h2>

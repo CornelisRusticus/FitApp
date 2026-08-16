@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fitstreak-v2';
+const CACHE_NAME = 'fitstreak-v3';
 const ASSETS = [
   './',
   './index.html',
