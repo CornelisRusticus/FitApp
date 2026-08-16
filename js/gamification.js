@@ -18,16 +18,16 @@ export function isoWeekStart(d = new Date()) {
 }
 
 export const BADGES = [
-  { id: 'first_ride', emoji: '🚴', name: 'Eerste rit', check: (s) => s.rides.length >= 1 },
+  { id: 'first_activity', emoji: '🚴', name: 'Eerste activiteit', check: (s) => s.activities.length >= 1 },
   { id: 'first_strength', emoji: '💪', name: 'Eerste krachtsessie', check: (s) => s.sessions.length >= 1 },
   { id: 'streak_7', emoji: '🔥', name: '7 dagen streak', check: (s) => s.streak.longest >= 7 },
   { id: 'streak_30', emoji: '🔥', name: '30 dagen streak', check: (s) => s.streak.longest >= 30 },
   { id: 'streak_100', emoji: '🔥', name: '100 dagen streak', check: (s) => s.streak.longest >= 100 },
-  { id: 'distance_50', emoji: '📏', name: '50 km totaal gefietst', check: (s) => s.totalKm >= 50 },
-  { id: 'distance_250', emoji: '📏', name: '250 km totaal gefietst', check: (s) => s.totalKm >= 250 },
-  { id: 'distance_1000', emoji: '🏆', name: '1000 km totaal gefietst', check: (s) => s.totalKm >= 1000 },
-  { id: 'long_ride_45', emoji: '⏱️', name: 'Rit van 45+ minuten', check: (s) => s.rides.some((r) => r.durationS / 60 >= 45) },
-  { id: 'cycling_level_up', emoji: '🚴', name: 'Fietsplan niveau omhoog', check: (s) => s.cyclingLevel >= 1 },
+  { id: 'distance_50', emoji: '📏', name: '50 km totaal afgelegd', check: (s) => s.totalKm >= 50 },
+  { id: 'distance_250', emoji: '📏', name: '250 km totaal afgelegd', check: (s) => s.totalKm >= 250 },
+  { id: 'distance_1000', emoji: '🏆', name: '1000 km totaal afgelegd', check: (s) => s.totalKm >= 1000 },
+  { id: 'long_activity_45', emoji: '⏱️', name: 'Activiteit van 45+ minuten', check: (s) => s.activities.some((a) => a.durationS / 60 >= 45) },
+  { id: 'cardio_level_up', emoji: '🚴', name: 'Cardio-plan niveau omhoog', check: (s) => s.cardioLevel >= 1 },
   { id: 'strength_10', emoji: '🏋️', name: '10 krachtsessies voltooid', check: (s) => s.sessions.length >= 10 },
   { id: 'strength_50', emoji: '🏋️', name: '50 krachtsessies voltooid', check: (s) => s.sessions.length >= 50 },
   { id: 'consistent_month', emoji: '📅', name: '4 weken op rij actief', check: (s) => s.streak.longest >= 28 }
@@ -74,12 +74,12 @@ export function levelForXp(xp) {
 }
 
 export function checkNewBadges() {
-  const rides = Store.getRides();
+  const activities = Store.getActivities();
   const sessions = Store.getStrengthSessions();
   const streak = Store.getStreak();
-  const totalKm = rides.reduce((sum, r) => sum + (r.distanceKm || 0), 0);
-  const cyclingLevel = Store.getCyclingLevel();
-  const state = { rides, sessions, streak, totalKm, cyclingLevel };
+  const totalKm = activities.reduce((sum, a) => sum + (a.distanceKm || 0), 0);
+  const cardioLevel = Store.getCardioLevel();
+  const state = { activities, sessions, streak, totalKm, cardioLevel };
 
   const earned = Store.getBadges();
   const earnedIds = new Set(earned.map((b) => b.id));
@@ -104,12 +104,12 @@ export function recordActivity(xpAmount) {
 }
 
 export function getHeatmapData(days = 70) {
-  const rides = Store.getRides();
+  const activities = Store.getActivities();
   const sessions = Store.getStrengthSessions();
   const map = {};
-  for (const r of rides) {
-    const d = r.date.slice(0, 10);
-    map[d] = (map[d] || 0) + 1 + Math.min(r.distanceKm / 10, 2);
+  for (const a of activities) {
+    const d = a.date.slice(0, 10);
+    map[d] = (map[d] || 0) + 1 + Math.min((a.distanceKm || 0) / 10, 2);
   }
   for (const s of sessions) {
     const d = s.date.slice(0, 10);

@@ -14,8 +14,8 @@ function set(key, value) {
 }
 
 export const Store = {
-  getRides: () => get('rides', []),
-  saveRides: (rides) => set('rides', rides),
+  getActivities: () => get('activities', get('rides', []).map((r) => ({ ...r, type: r.type || 'cycling' }))),
+  saveActivities: (activities) => set('activities', activities),
 
   getWeights: () => get('weights', []),
   saveWeights: (weights) => set('weights', weights),
@@ -26,13 +26,16 @@ export const Store = {
   getStrengthLevels: () => get('strength_levels', {}),
   saveStrengthLevels: (levels) => set('strength_levels', levels),
 
-  getSettings: () => ({
-    playlistCycling: '',
-    playlistStrength: '',
-    goalWeightKg: null,
-    strengthDays: [1, 3, 5],
-    ...get('settings', {})
-  }),
+  getSettings: () => {
+    const stored = get('settings', {});
+    return {
+      playlistCardio: stored.playlistCycling || '',
+      playlistStrength: '',
+      goalWeightKg: null,
+      strengthDays: [1, 3, 5],
+      ...stored
+    };
+  },
   saveSettings: (settings) => set('settings', settings),
 
   getStreak: () =>
@@ -48,8 +51,8 @@ export const Store = {
   getLastBackup: () => get('last_backup', null),
   saveLastBackup: (isoDate) => set('last_backup', isoDate),
 
-  getCyclingLevel: () => get('cycling_level', 0),
-  saveCyclingLevel: (level) => set('cycling_level', level),
+  getCardioLevel: () => get('cardio_level', get('cycling_level', 0)),
+  saveCardioLevel: (level) => set('cardio_level', level),
 
   exportAll: () => {
     const data = {};

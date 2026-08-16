@@ -1,7 +1,7 @@
 import { Store } from './storage.js';
 import { quoteForToday } from './quotes.js';
 import { recordActivity, getHeatmapData, BADGES, levelForXp } from './gamification.js';
-import { CYCLING_LEVELS, getCurrentWeekMinutes, checkCyclingProgression, avgSpeedOf, logRide, updateRide, deleteRide } from './cycling.js';
+import { ACTIVITY_TYPES, CARDIO_LEVELS, getCurrentWeekEffectiveMinutes, checkCardioProgression, avgSpeedOf, logActivity, updateActivity, deleteActivity } from './activity.js';
 import { EXERCISES, DAYS, RPE_OPTIONS, getLevelIndex, setLevelIndex, getNextDay, getWeeklyCount, logSession } from './strength.js';
 import { addWeight, drawWeightChart } from './weight.js';
 import { exerciseDiagramSvg, exerciseNote } from './illustrations.js';
@@ -53,7 +53,7 @@ function showScreen(name) {
   screens.forEach((s) => s.classList.toggle('active', s.id === 'screen-' + name));
   document.querySelectorAll('nav.tabbar button').forEach((b) => b.classList.toggle('active', b.dataset.nav === name));
   if (name === 'dashboard') renderDashboard();
-  if (name === 'cycling') renderCycling();
+  if (name === 'cardio') renderCardio();
   if (name === 'strength') renderStrength();
   if (name === 'weight') renderWeight();
   if (name === 'settings') renderSettings();
@@ -87,12 +87,9 @@ function renderDashboard() {
   });
   document.getElementById('week-nudge').textContent = strengthDays.includes(today)
     ? '💪 Vandaag staat kracht gepland.'
-    : '🚴 Vandaag lekker fietsen, kracht is een andere dag.';
+    : '🚴 Vandaag lekker bewegen (fietsen, suppen, wandelen), kracht is een andere dag.';
 
-  const rides = Store.getRides();
-  const weekAgo = Date.now() - 7 * 86400000;
-  const weekKm = rides.filter((r) => new Date(r.date).getTime() >= weekAgo).reduce((s, r) => s + r.distanceKm, 0);
-  document.getElementById('week-km').textContent = weekKm.toFixed(1);
+  document.getElementById('week-cardio-min').textContent = Math.round(getCurrentWeekEffectiveMinutes());
   document.getElementById('week-strength').textContent = `${getWeeklyCount()}/3`;
   document.getElementById('dash-level').textContent = levelForXp(Store.getXp());
 
@@ -123,20 +120,51 @@ function renderDashboard() {
   });
 }
 
-/* ---------- cycling ---------- */
-function renderCycling() {
-  playlistLink(document.getElementById('cycling-playlist-btn'), Store.getSettings().playlistCycling);
+/* ---------- cardio ---------- */
+let selectedActivityType = 'cycling';
+
+function updateDistanceFieldVisibility() {
+  const hasDistance = ACTIVITY_TYPES[selectedActivityType].hasDistance;
+  const label = document.getElementById('ride-distance-label');
+  const input = document.getElementById('ride-distance');
+  label.style.display = hasDistance ? 'block' : 'none';
+  input.style.display = hasDistance ? 'block' : 'none';
+  if (!hasDistance) input.value = '';
+}
+
+function renderActivityTypePicker() {
+  const picker = document.getElementById('activity-type-picker');
+  picker.innerHTML = '';
+  Object.entries(ACTIVITY_TYPES).forEach(([id, type]) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = `${type.emoji} ${type.label}`;
+    btn.classList.toggle('selected', id === selectedActivityType);
+    btn.addEventListener('click', () => {
+      selectedActivityType = id;
+      picker.querySelectorAll('button').forEach((b) => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      updateDistanceFieldVisibility();
+    });
+    picker.appendChild(btn);
+  });
+}
+
+function renderCardio() {
+  playlistLink(document.getElementById('cardio-playlist-btn'), Store.getSettings().playlistCardio);
   document.getElementById('ride-date').value = new Date().toISOString().slice(0, 10);
   document.getElementById('ride-minutes').value = '';
   document.getElementById('ride-distance').value = '';
   document.querySelectorAll('#duration-presets button').forEach((b) => b.classList.remove('selected'));
+  renderActivityTypePicker();
+  updateDistanceFieldVisibility();
 
-  const level = Store.getCyclingLevel();
-  const plan = CYCLING_LEVELS[level];
-  document.getElementById('cycling-plan-label').textContent = `Niveau: ${plan.label}`;
-  document.getElementById('cycling-plan-desc').textContent = plan.description;
-  document.getElementById('cycling-week-min').textContent = Math.round(getCurrentWeekMinutes());
-  document.getElementById('cycling-week-target').textContent = plan.weeklyTargetMin;
+  const level = Store.getCardioLevel();
+  const plan = CARDIO_LEVELS[level];
+  document.getElementById('cardio-plan-label').textContent = `Niveau: ${plan.label}`;
+  document.getElementById('cardio-plan-desc').textContent = plan.description;
+  document.getElementById('cardio-week-min').textContent = Math.round(getCurrentWeekEffectiveMinutes());
+  document.getElementById('cardio-week-target').textContent = plan.weeklyTargetMin;
 
   renderRidePRs();
   renderRideHistory();
@@ -150,15 +178,16 @@ document.querySelectorAll('#duration-presets button').forEach((btn) => {
   });
 });
 
-function finishRideLog(minutes, distanceKm, prs, newBadges) {
-  toast(`Rit opgeslagen: ${minutes} min${distanceKm ? ' · ' + distanceKm + ' km' : ''}`);
+function finishActivityLog(minutes, distanceKm, prs, newBadges) {
+  const typeLabel = ACTIVITY_TYPES[selectedActivityType].label;
+  toast(`${typeLabel} opgeslagen: ${minutes} min${distanceKm ? ' · ' + distanceKm + ' km' : ''}`);
   let delay = 1200;
-  if (prs.duration) { setTimeout(() => toast('🏆 Nieuw record: langste rit!'), delay); delay += 1200; }
-  if (prs.distance) { setTimeout(() => toast('📏 Nieuw record: verste rit!'), delay); delay += 1200; }
+  if (prs.duration) { setTimeout(() => toast('🏆 Nieuw record: langste activiteit!'), delay); delay += 1200; }
+  if (prs.distance) { setTimeout(() => toast('📏 Nieuw record: verste afstand!'), delay); delay += 1200; }
   newBadges.forEach((b) => { setTimeout(() => toast(`${b.emoji} Nieuwe badge: ${b.name}`), delay); delay += 1200; });
-  const leveledUpPlan = checkCyclingProgression();
-  if (leveledUpPlan) { setTimeout(() => toast(`🚴 Fietsplan omhoog: ${leveledUpPlan.label}!`), delay); delay += 1200; }
-  renderCycling();
+  const leveledUpPlan = checkCardioProgression();
+  if (leveledUpPlan) { setTimeout(() => toast(`🚴 Cardio-plan omhoog: ${leveledUpPlan.label}!`), delay); delay += 1200; }
+  renderCardio();
 }
 
 document.getElementById('ride-log-btn').addEventListener('click', () => {
@@ -166,27 +195,27 @@ document.getElementById('ride-log-btn').addEventListener('click', () => {
   const distanceKm = parseFloat(document.getElementById('ride-distance').value) || 0;
   const date = document.getElementById('ride-date').value;
   if (!minutes || minutes <= 0) {
-    toast('Vul aan hoeveel minuten je gefietst hebt.');
+    toast('Vul aan hoeveel minuten je actief was.');
     return;
   }
-  const { prs } = logRide({ minutes, distanceKm, date: date ? new Date(date).toISOString() : undefined });
+  const { prs } = logActivity({ type: selectedActivityType, minutes, distanceKm, date: date ? new Date(date).toISOString() : undefined });
   const { newBadges } = recordActivity(10 + Math.round(minutes / 10));
-  finishRideLog(minutes, distanceKm, prs, newBadges);
+  finishActivityLog(minutes, distanceKm, prs, newBadges);
 });
 
 function renderRidePRs() {
-  const rides = Store.getRides();
+  const activities = Store.getActivities();
   const box = document.getElementById('ride-prs');
   box.innerHTML = '';
-  if (!rides.length) {
+  if (!activities.length) {
     box.innerHTML = '<p class="empty">Nog geen data</p>';
     return;
   }
-  const longestMin = Math.max(...rides.map((r) => r.durationS / 60));
-  const stats = [['Langste rit', Math.round(longestMin) + ' min']];
-  const farthest = Math.max(...rides.map((r) => r.distanceKm || 0));
-  if (farthest > 0) stats.push(['Verste rit', farthest.toFixed(1) + ' km']);
-  const bestAvg = Math.max(...rides.map((r) => avgSpeedOf(r)));
+  const longestMin = Math.max(...activities.map((a) => a.durationS / 60));
+  const stats = [['Langste activiteit', Math.round(longestMin) + ' min']];
+  const farthest = Math.max(...activities.map((a) => a.distanceKm || 0));
+  if (farthest > 0) stats.push(['Verste afstand', farthest.toFixed(1) + ' km']);
+  const bestAvg = Math.max(...activities.map((a) => avgSpeedOf(a)));
   if (bestAvg > 0) stats.push(['Beste gem.', bestAvg.toFixed(1) + ' km/u']);
   stats.forEach(([label, val]) => {
     const div = document.createElement('div');
@@ -204,31 +233,32 @@ function renderRidePRs() {
 }
 
 function renderRideHistory() {
-  const rides = [...Store.getRides()].reverse();
+  const activities = [...Store.getActivities()].reverse();
   const container = document.getElementById('ride-history');
   container.innerHTML = '';
-  if (!rides.length) {
-    container.innerHTML = '<p class="empty">Nog geen ritten gelogd.</p>';
+  if (!activities.length) {
+    container.innerHTML = '<p class="empty">Nog geen activiteiten gelogd.</p>';
     return;
   }
-  rides.slice(0, 30).forEach((r) => {
+  activities.slice(0, 30).forEach((a) => {
+    const type = ACTIVITY_TYPES[a.type] || ACTIVITY_TYPES.cycling;
     const div = document.createElement('div');
     div.className = 'ride-item';
     div.style.cursor = 'pointer';
-    const date = new Date(r.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+    const date = new Date(a.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
     const left = document.createElement('div');
-    left.innerHTML = `<strong>${Math.round(r.durationS / 60)} min</strong><div class="meta">${date}</div>`;
+    left.innerHTML = `<strong>${type.emoji} ${Math.round(a.durationS / 60)} min</strong><div class="meta">${type.label} · ${date}</div>`;
     const right = document.createElement('div');
     right.className = 'meta';
-    right.textContent = r.distanceKm ? `${r.distanceKm} km` : 'geen afstand';
+    right.textContent = a.distanceKm ? `${a.distanceKm} km` : '';
     div.appendChild(left);
     div.appendChild(right);
-    div.addEventListener('click', () => showRideEdit(r));
+    div.addEventListener('click', () => showRideEdit(a));
     container.appendChild(div);
   });
 }
 
-function showRideEdit(ride) {
+function showRideEdit(activity) {
   const container = document.getElementById('ride-history');
   container.innerHTML = '';
 
@@ -238,19 +268,35 @@ function showRideEdit(ride) {
   backBtn.style.marginBottom = '10px';
   backBtn.addEventListener('click', renderRideHistory);
 
+  const typeRow = document.createElement('div');
+  typeRow.className = 'preset-row';
+  let editType = activity.type || 'cycling';
+  Object.entries(ACTIVITY_TYPES).forEach(([id, type]) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = `${type.emoji} ${type.label}`;
+    btn.classList.toggle('selected', id === editType);
+    btn.addEventListener('click', () => {
+      editType = id;
+      typeRow.querySelectorAll('button').forEach((b) => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+    typeRow.appendChild(btn);
+  });
+
   const minutesLabel = document.createElement('label');
   minutesLabel.textContent = 'Minuten';
   const minutesInput = document.createElement('input');
   minutesInput.type = 'number';
   minutesInput.min = '1';
-  minutesInput.value = Math.round(ride.durationS / 60);
+  minutesInput.value = Math.round(activity.durationS / 60);
 
   const distanceLabel = document.createElement('label');
   distanceLabel.textContent = 'Afstand in km (optioneel)';
   const distanceInput = document.createElement('input');
   distanceInput.type = 'number';
   distanceInput.step = '0.1';
-  distanceInput.value = ride.distanceKm || '';
+  distanceInput.value = activity.distanceKm || '';
 
   const saveBtn = document.createElement('button');
   saveBtn.className = 'btn-primary';
@@ -262,23 +308,24 @@ function showRideEdit(ride) {
       toast('Vul een geldig aantal minuten in.');
       return;
     }
-    updateRide(ride.id, { minutes, distanceKm: parseFloat(distanceInput.value) || 0 });
-    toast('Rit bijgewerkt.');
-    renderCycling();
+    updateActivity(activity.id, { minutes, distanceKm: parseFloat(distanceInput.value) || 0, type: editType });
+    toast('Activiteit bijgewerkt.');
+    renderCardio();
   });
 
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'btn-danger';
-  deleteBtn.textContent = 'Verwijder deze rit';
+  deleteBtn.textContent = 'Verwijder deze activiteit';
   deleteBtn.style.marginTop = '8px';
   deleteBtn.style.width = '100%';
   deleteBtn.addEventListener('click', () => {
-    deleteRide(ride.id);
-    toast('Rit verwijderd.');
-    renderCycling();
+    deleteActivity(activity.id);
+    toast('Activiteit verwijderd.');
+    renderCardio();
   });
 
   container.appendChild(backBtn);
+  container.appendChild(typeRow);
   container.appendChild(minutesLabel);
   container.appendChild(minutesInput);
   container.appendChild(distanceLabel);
@@ -529,7 +576,7 @@ let selectedStrengthDays = [];
 
 function renderSettings() {
   const settings = Store.getSettings();
-  document.getElementById('settings-playlist-cycling').value = settings.playlistCycling || '';
+  document.getElementById('settings-playlist-cardio').value = settings.playlistCardio || '';
   document.getElementById('settings-playlist-strength').value = settings.playlistStrength || '';
   document.getElementById('settings-goal-weight').value = settings.goalWeightKg || '';
 
@@ -586,7 +633,7 @@ function renderSettings() {
 
 document.getElementById('settings-save-btn').addEventListener('click', () => {
   const settings = Store.getSettings();
-  settings.playlistCycling = sanitizeUrl(document.getElementById('settings-playlist-cycling').value.trim());
+  settings.playlistCardio = sanitizeUrl(document.getElementById('settings-playlist-cardio').value.trim());
   settings.playlistStrength = sanitizeUrl(document.getElementById('settings-playlist-strength').value.trim());
   const goal = parseFloat(document.getElementById('settings-goal-weight').value);
   settings.goalWeightKg = goal > 0 ? goal : null;
