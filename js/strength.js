@@ -23,8 +23,10 @@ export const EXERCISES = {
   },
   row: {
     name: 'Rug Rows (tafel/handdoek om deur)',
+    equipment:
+      'Een bezemsteel op twee tafels werkt, maar is instabiel (tafels kunnen wegschuiven, steel kan doorbuigen/rollen). Veiliger en makkelijker in zwaarte te verstellen: een suspension trainer (TRX-achtig bandje over een deur, ±€20) of een weerstandsband om een deur vastgemaakt.',
     levels: [
-      { label: 'Table Row', sets: 3, reps: 10 },
+      { label: 'Table Row', sets: 3, reps: 8 },
       { label: 'Table Row', sets: 3, reps: 15 },
       { label: 'Handdoek Deur-row', sets: 3, reps: 12 },
       { label: 'Handdoek Deur-row', sets: 3, reps: 18 },
@@ -45,6 +47,7 @@ export const EXERCISES = {
     name: 'Plank',
     levels: [
       { label: 'Plank', sets: 3, reps: 20, unit: 's' },
+      { label: 'Plank', sets: 3, reps: 30, unit: 's' },
       { label: 'Plank', sets: 3, reps: 40, unit: 's' },
       { label: 'Plank', sets: 3, reps: 60, unit: 's' },
       { label: 'Plank met arm/beenlift', sets: 3, reps: 40, unit: 's' },
@@ -63,6 +66,7 @@ export const EXERCISES = {
   },
   pike: {
     name: 'Pike Push-up (schouders)',
+    equipment: 'Voor de "verhoogde" variant: voeten op een stevige, lage verhoging (bv. onderste traptrede of een stevige stoel).',
     levels: [
       { label: 'Pike Push-up', sets: 3, reps: 8 },
       { label: 'Pike Push-up', sets: 3, reps: 12 },

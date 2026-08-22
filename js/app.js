@@ -4,7 +4,7 @@ import { recordActivity, getHeatmapData, BADGES, levelForXp } from './gamificati
 import { ACTIVITY_TYPES, CARDIO_LEVELS, getCurrentWeekEffectiveMinutes, checkCardioProgression, avgSpeedOf, logActivity, updateActivity, deleteActivity } from './activity.js';
 import { EXERCISES, DAYS, RPE_OPTIONS, getLevelIndex, setLevelIndex, getNextDay, getWeeklyCount, logSession } from './strength.js';
 import { addWeight, drawWeightChart } from './weight.js';
-import { exerciseDiagramSvg, exerciseNote } from './illustrations.js';
+import { exerciseDiagramSvg, exerciseNote, resolvePoseKey } from './illustrations.js';
 
 function sanitizeUrl(url) {
   if (!url) return '';
@@ -163,6 +163,7 @@ function renderCardio() {
   const plan = CARDIO_LEVELS[level];
   document.getElementById('cardio-plan-label').textContent = `Niveau: ${plan.label}`;
   document.getElementById('cardio-plan-desc').textContent = plan.description;
+  document.getElementById('cardio-coach-tip').textContent = plan.coachTip || '';
   document.getElementById('cardio-week-min').textContent = Math.round(getCurrentWeekEffectiveMinutes());
   document.getElementById('cardio-week-target').textContent = plan.weeklyTargetMin;
 
@@ -385,6 +386,71 @@ function startRestTimer(timerEl) {
   }, 1000);
 }
 
+let audioCtx = null;
+function beep(freq = 880, durationMs = 150, type = 'sine') {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.3, audioCtx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + durationMs / 1000);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + durationMs / 1000 + 0.02);
+  } catch {}
+}
+
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'nl-NL';
+    u.rate = 1.0;
+    window.speechSynthesis.speak(u);
+  } catch {}
+}
+
+function startHoldTimer(row, setLabel, checkIcon, totalSeconds, onDone) {
+  beep(660, 80);
+  row.classList.add('timing');
+  checkIcon.textContent = '⏸';
+  let remaining = totalSeconds;
+  setLabel.textContent = `⏳ nog ${remaining}s`;
+  row._timerInterval = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      clearInterval(row._timerInterval);
+      row._timerInterval = null;
+      row.classList.remove('timing');
+      beep(1046, 300, 'square');
+      if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+      speak('Klaar!');
+      onDone();
+      return;
+    }
+    setLabel.textContent = `⏳ nog ${remaining}s`;
+    if (remaining % 10 === 0) {
+      beep(660, 100);
+      speak(String(remaining));
+    }
+  }, 1000);
+}
+
+function cancelHoldTimer(row, setLabel, checkIcon, baseLabel) {
+  if (!row._timerInterval) return;
+  clearInterval(row._timerInterval);
+  row._timerInterval = null;
+  row.classList.remove('timing');
+  setLabel.textContent = baseLabel;
+  checkIcon.textContent = '☐';
+}
+
 function youtubeSearchUrl(name) {
   return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(name + ' oefening juiste vorm uitleg');
 }
@@ -413,19 +479,28 @@ function renderStrengthExercises() {
       unit === 'sec'
         ? `${levelDef.label} · ${levelDef.sets} sets van ${levelDef.reps} sec vasthouden`
         : `${levelDef.label} · ${levelDef.sets} sets van ${levelDef.reps} herhalingen`;
+    const poseKey = resolvePoseKey(log.id, levelDef.label);
     const diagramWrap = document.createElement('div');
     diagramWrap.className = 'diagram-wrap';
-    diagramWrap.innerHTML = exerciseDiagramSvg(log.id);
+    diagramWrap.innerHTML = exerciseDiagramSvg(poseKey);
     const howTo = document.createElement('p');
     howTo.className = 'empty';
     howTo.style.textAlign = 'left';
     howTo.style.margin = '6px 0 10px';
-    howTo.textContent = exerciseNote(log.id);
+    howTo.textContent = exerciseNote(poseKey);
     block.appendChild(h3);
     block.appendChild(videoLink);
     block.appendChild(diagramWrap);
     block.appendChild(target);
     block.appendChild(howTo);
+    if (def.equipment) {
+      const equip = document.createElement('p');
+      equip.className = 'empty';
+      equip.style.textAlign = 'left';
+      equip.style.margin = '0 0 10px';
+      equip.textContent = '🧰 ' + def.equipment;
+      block.appendChild(equip);
+    }
 
     const restTimer = document.createElement('div');
     restTimer.className = 'rest-timer';
@@ -438,13 +513,33 @@ function renderStrengthExercises() {
       setLabel.textContent = unit === 'sec' ? `Set ${setIdx + 1} · ${levelDef.reps} sec` : `Set ${setIdx + 1} · ${levelDef.reps} reps`;
       const checkIcon = document.createElement('span');
       checkIcon.className = 'check-icon';
+      const baseLabel = setLabel.textContent;
       const applyState = () => {
         const done = log.sets[setIdx] >= levelDef.reps;
+        setLabel.textContent = baseLabel;
         row.classList.toggle('done', done);
         checkIcon.textContent = done ? '✅' : '☐';
       };
       applyState();
       row.addEventListener('click', () => {
+        if (unit === 'sec') {
+          if (row._timerInterval) {
+            cancelHoldTimer(row, setLabel, checkIcon, baseLabel);
+            return;
+          }
+          const wasDone = log.sets[setIdx] >= levelDef.reps;
+          if (wasDone) {
+            log.sets[setIdx] = 0;
+            applyState();
+            return;
+          }
+          startHoldTimer(row, setLabel, checkIcon, levelDef.reps, () => {
+            log.sets[setIdx] = levelDef.reps;
+            applyState();
+            startRestTimer(restTimer);
+          });
+          return;
+        }
         const wasDone = log.sets[setIdx] >= levelDef.reps;
         log.sets[setIdx] = wasDone ? 0 : levelDef.reps;
         applyState();

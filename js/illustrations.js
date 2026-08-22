@@ -9,10 +9,15 @@ const POSES = {
     end: { head: [16, 58], shoulder: [28, 60], hip: [62, 46], hand: [28, 70], knee: [90, 44], foot: [96, 44] },
     note: 'Lichaam één rechte lijn van hoofd tot voeten. Ellebogen buigen tot je borst bijna de grond raakt.'
   },
+  pushup_knee: {
+    start: { head: [18, 44], shoulder: [28, 46], hip: [54, 46], hand: [28, 70], knee: [74, 70], foot: [72, 88] },
+    end: { head: [18, 60], shoulder: [28, 62], hip: [54, 50], hand: [28, 70], knee: [74, 70], foot: [72, 88] },
+    note: 'Knieën op de grond (niet je voeten!). Rechte lijn van hoofd tot je knieën — je onderbenen wijzen omhoog/achter je, niet gestrekt. Ellebogen buigen tot je borst bijna de grond raakt.'
+  },
   row: {
     start: { head: [22, 32], shoulder: [30, 40], hip: [58, 46], hand: [78, 70], knee: [80, 70], foot: [84, 96] },
     end: { head: [22, 32], shoulder: [30, 40], hip: [58, 46], hand: [46, 44], knee: [80, 70], foot: [84, 96] },
-    note: 'Buig voorover vanuit de heup, trek je ellebogen naar achteren tot je schouderbladen samenknijpen.'
+    note: 'Buig voorover vanuit de heup, trek je ellebogen naar achteren tot je schouderbladen samenknijpen. Te zwaar? Buig je knieën meer en zet je voeten dichter bij je heupen — hoe rechter/horizontaler je lichaam hangt, hoe meer van je lichaamsgewicht je moet optrekken.'
   },
   glutebridge: {
     start: { head: [12, 82], shoulder: [26, 82], hip: [52, 84], hand: [26, 92], knee: [72, 66], foot: [88, 84] },
@@ -75,6 +80,11 @@ function figureMarkup(pose, color, opacity) {
   }
   parts.push(`<circle cx="${pose.head[0]}" cy="${pose.head[1]}" r="7" fill="${color}" />`);
   return `<g opacity="${opacity}">${parts.join('')}</g>`;
+}
+
+export function resolvePoseKey(exerciseId, levelLabel) {
+  if (exerciseId === 'pushup' && levelLabel && levelLabel.toLowerCase().includes('knie')) return 'pushup_knee';
+  return exerciseId;
 }
 
 export function exerciseDiagramSvg(exerciseId) {

@@ -8,10 +8,30 @@ export const ACTIVITY_TYPES = {
 };
 
 export const CARDIO_LEVELS = [
-  { label: 'Op gang komen', weeklyTargetMin: 75, description: '±75 effectieve min/week: bv. 3x een kwartier actief pendelen/wandelen + 1x een rustige tocht van ~30 min in het weekend.' },
-  { label: 'Ritme te pakken', weeklyTargetMin: 100, description: '±100 effectieve min/week: bv. 3x ~20 min doordeweeks + 1x ~40 min in het weekend.' },
-  { label: 'Vaste ritme', weeklyTargetMin: 130, description: '±130 effectieve min/week: bv. 3-4x ~20-25 min doordeweeks + 1x ~50 min in het weekend.' },
-  { label: 'Volop in beweging', weeklyTargetMin: 160, description: '±160 effectieve min/week: bv. 4x ~25 min doordeweeks + 1x ~60 min in het weekend — dit is je plafond, meer hoeft niet.' }
+  {
+    label: 'Op gang komen',
+    weeklyTargetMin: 75,
+    description: '±75 effectieve min/week: bv. 3x een kwartier actief pendelen/wandelen + 1x een rustige tocht van ~30 min in het weekend.',
+    coachTip: 'Coach-tip: hou een tempo aan waarbij je nog net een gesprek kan voeren (rustig ademen). Dat is genoeg om te wennen — snelheid komt later.'
+  },
+  {
+    label: 'Ritme te pakken',
+    weeklyTargetMin: 100,
+    description: '±100 effectieve min/week: bv. 3x ~20 min doordeweeks + 1x ~40 min in het weekend.',
+    coachTip: 'Coach-tip: probeer 1x per week wat pittiger te gaan — bv. 5x (1 min iets harder / 2 min rustig) tussendoor. Dat traint je hart net wat meer dan alleen rustig doortrappen.'
+  },
+  {
+    label: 'Vaste ritme',
+    weeklyTargetMin: 130,
+    description: '±130 effectieve min/week: bv. 3-4x ~20-25 min doordeweeks + 1x ~50 min in het weekend.',
+    coachTip: 'Coach-tip: bouw 1 duidelijke intervaltraining per week in (bv. 6-8x 1 min stevig doortrappen/lopen, 2 min rustig herstellen). De rest lekker op gemak.'
+  },
+  {
+    label: 'Volop in beweging',
+    weeklyTargetMin: 160,
+    description: '±160 effectieve min/week: bv. 4x ~25 min doordeweeks + 1x ~60 min in het weekend — dit is je plafond, meer hoeft niet.',
+    coachTip: 'Coach-tip: variatie is nu belangrijker dan meer minuten — wissel rustige duurtochten af met 1-2 pittigere intervalsessies per week.'
+  }
 ];
 
 function effectiveMinutes(activity) {
